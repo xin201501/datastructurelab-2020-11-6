@@ -9,9 +9,10 @@ template <typename T> struct LinkNode {
   using LinkNodePtr = LinkNode *;
   T value;
   LinkNode *next;
-  LinkNode(const T &value = 0, LinkNode *next = nullptr)
+  LinkNode(const T &value = {}, LinkNode *next = nullptr)
       : value(value), next(next) {}
-  LinkNode(T &&value) noexcept : LinkNode(std::move(value)) {}
+  LinkNode(T &&value, LinkNode *next = nullptr) noexcept
+      : LinkNode(std::move(value), next) {}
   //!(LinkNode对象)写法可判断节点是否为尾节点
   explicit operator bool() { return next == nullptr; }
 };
@@ -21,12 +22,12 @@ public:
   using LinkNodeReference = LinkNode<T> &;
   using value_type = T;
 
-private:
+protected:
   LinkNodePtr head;
 
 public:
   //创建空链表
-  LinkList() : head(new LinkNode<T>()) {}
+  LinkList(LinkNodePtr headLocation = new LinkNode<T>()) : head(headLocation) {}
   //拷贝构造链表
   LinkList(const LinkList<T> &another) : LinkList() {
     LinkNodePtr anotherListCur = (another.head)->next;
@@ -103,8 +104,9 @@ public:
                    std::cout << node->value << ' ';
                  }) const {
     //使常量复用非常量函数,只要不改变它的值即可,visitWay参数为const引用保证它不被修改
-    const_cast<LinkList<T> *>(this)->visit(visitWay);
+    const_cast<LinkList *>(this)->visit(visitWay);
   }
+  bool isEmpty() const { return !head->next; }
   void addNode(const T &value) {
     LinkNodePtr newNode = new LinkNode(value, head->next);
     newNode->next = head->next;
@@ -120,6 +122,10 @@ public:
     }
     return nullptr;
   }
+  const LinkNodePtr searchNode(const T &value) const {
+    return const_cast<LinkList *>(this)->searchNode(value);
+  }
+  bool contains(const T &value) const { return searchNode(value) != nullptr; }
   //删除与给定值相等的节点
   bool deleteNode(const T &value) {
     LinkNodePtr cur = head->next, pre = head;
